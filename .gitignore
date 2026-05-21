@@ -13,6 +13,7 @@ node_modules/
 *.lib
 *.o
 *.obj
+*.bak
 test*
 
 package-lock.json

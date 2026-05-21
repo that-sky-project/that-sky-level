@@ -125,11 +125,11 @@ class LevelGeoChunk extends IBinarying {
 
     this.vtxStart = 0;
     this.idxStart = 0;
-    this.areaStart = 0;
+    this.subchunkStart = 0;
 
     this.idxCount = 0;
     this.vtxCount = 0;
-    this.areaCount = 0;
+    this.subchunkCount = 0;
 
     this.min = new Vec3();
     this.max = new Vec3();
@@ -138,11 +138,11 @@ class LevelGeoChunk extends IBinarying {
   fromStream(stream) {
     this.vtxStart = stream.readUint32();
     this.idxStart = stream.readUint32();
-    this.areaStart = stream.readUint32();
+    this.subchunkStart = stream.readUint32();
 
     this.idxCount = stream.readUint16();
     this.vtxCount = stream.readUint8();
-    this.areaCount = stream.readUint8();
+    this.subchunkCount = stream.readUint8();
 
     this.min = stream.readType(Vec3);
     this.max = stream.readType(Vec3);
@@ -156,11 +156,11 @@ class LevelGeoChunk extends IBinarying {
   toStream(stream) {
     stream.writeUint32(this.vtxStart);
     stream.writeUint32(this.idxStart);
-    stream.writeUint32(this.areaStart);
+    stream.writeUint32(this.subchunkStart);
 
     stream.writeUint16(this.idxCount);
     stream.writeUint8(this.vtxCount);
-    stream.writeUint8(this.areaCount);
+    stream.writeUint8(this.subchunkCount);
 
     stream.writeType(this.min);
     stream.writeType(this.max);

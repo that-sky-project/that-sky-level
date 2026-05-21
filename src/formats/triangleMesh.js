@@ -1,3 +1,4 @@
+const { kMaterial } = require("../enums/kMaterial.js");
 const { Vec3 } = require("../utils/vector.js");
 
 class TriangleMeshVertex {
@@ -9,6 +10,7 @@ class TriangleMeshVertex {
 
 class TriangleMeshMaterial {
   static Null = new TriangleMeshMaterial();
+  static Default = new TriangleMeshMaterial("kMaterial_Cliff");
 
   static isNull(mat) {
     return mat == TriangleMeshMaterial.Null;
@@ -16,6 +18,33 @@ class TriangleMeshMaterial {
 
   constructor(name) {
     this.name = name || "";
+  }
+
+  getId() {
+    if (this.name.substring(0, 10) !== "kMaterial_")
+      return 0;
+    return kMaterial[this.name.substring(10)];
+  }
+}
+
+class TriangleMeshMaterialBarn {
+  constructor() {
+    this.materials = new Map();
+  }
+
+  initialize() {
+    this.materials.clear();
+    this.materials.set("", TriangleMeshMaterial.Null);
+  }
+
+  tryAddMaterial(name) {
+    if (this.materials.has(name))
+      return this.materials.get(name);
+
+    var result = new TriangleMeshMaterial(name);
+    this.materials.set(name, result);
+
+    return result;
   }
 }
 
@@ -30,26 +59,15 @@ class TriangleMesh {
   constructor() {
     this.cmdBuffer = [];
     this.vtxBuffer = [];
-    this.materials = new Map();
+    this.materials = new TriangleMeshMaterialBarn();
 
     this.clear();
-  }
-
-  tryAddMaterial(name) {
-    if (this.materials.has(name))
-      return this.materials.get(name);
-
-    var result = new TriangleMeshMaterial(name);
-    this.materials.set(name, result);
-
-    return result;
   }
 
   clear() {
     this.cmdBuffer = [];
     this.vtxBuffer = [];
-    this.materials.clear();
-    this.materials.set("", TriangleMeshMaterial.Null);
+    this.materials.initialize();
   }
 }
 

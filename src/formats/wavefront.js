@@ -6,11 +6,15 @@ const {
   TriangleMeshFace
 } = require("./triangleMesh.js");
 
-// Parse a Wavefront OBJ string into vertices, indices, and per-triangle
-// material names. Only vertex positions and face indices are extracted.
-// Returns an object with vertices (array of [x, y, z]), indices
-// (flattened triangle index list), and materials (material name per
-// triangle). If no usemtl is given, "" is used.
+/**
+ * Parse a Wavefront OBJ string into vertices, indices, and per-triangle
+ * material names. Only vertex positions and face indices are extracted.
+ * Returns an object with vertices (array of [x, y, z]), indices
+ * (flattened triangle index list), and materials (material name per
+ * triangle). If no usemtl is given, "" is used.
+ * 
+ * @param {string} objStr 
+ */
 function parseObj(objStr) {
   // Split the file content into lines.
   var lines = objStr.split("\n")
@@ -107,6 +111,9 @@ class WavefrontObj extends TriangleMesh {
     super();
   }
 
+  /**
+   * @param {Buffer} fileBuffer 
+   */
   fromFileBuffer(fileBuffer) {
     var raw = parseObj(fileBuffer)
       , self = this;
@@ -122,7 +129,7 @@ class WavefrontObj extends TriangleMesh {
     this.cmdBuffer = raw.faces.map(function (f) {
       var result = new TriangleMeshFace();
       result.indices = f.indices;
-      result.materialRef = self.tryAddMaterial(f.material);
+      result.materialRef = self.materials.tryAddMaterial(f.material);
       return result;
     });
   }
