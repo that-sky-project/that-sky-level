@@ -1,0 +1,16 @@
+dist/
+.vscode/
+levelBinary/
+node_modules/
+
+*.meshes
+*.bin
+*.mesh
+*.exe
+*.a
+*.lib
+*.o
+*.obj
+test*
+
+package-lock.json
