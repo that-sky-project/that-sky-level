@@ -1,6 +1,8 @@
 dist/
 .vscode/
 levelBinary/
+models/
+docs/
 node_modules/
 
 *.meshes
