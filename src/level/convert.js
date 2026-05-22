@@ -1,19 +1,19 @@
-const { kMaterial } = require("./enums/kMaterial.js");
+const { kMaterial } = require("../enums/kMaterial.js");
 const {
   TriangleMeshVertex,
   TriangleMeshFace,
   TriangleMeshMaterial,
   TriangleMesh
-} = require("./formats/triangleMesh.js");
+} = require("../formats/triangleMesh.js");
 const {
   LevelGeo,
   LevelGeoMeshVertex,
   LevelGeoMeshVertexMaterial,
   LevelGeoChunk,
   LevelGeoSubchunk
-} = require("./level/levelGeo.js");
-const { R8G8B8A8_SNORM, R8G8B8A8_UNORM } = require("./utils/normVec.js");
-const { Vec3 } = require("./utils/vector.js");
+} = require("./meshes/levelGeo.js");
+const { R8G8B8A8_SNORM, R8G8B8A8_UNORM } = require("../utils/normVec.js");
+const { Vec3 } = require("../utils/vector.js");
 
 /**
  * Build a deduplication key from a vertex's geometry AND material.

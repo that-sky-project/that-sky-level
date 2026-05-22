@@ -1,9 +1,9 @@
-const MeshoptDecoder = require("../meshopt/meshopt_decoder.js");
-const MeshoptEncoder = require("../meshopt/meshopt_encoder.js");
-const { WritableBinaryStream, ReadOnlyBinaryStream } = require("../utils/binaryStream.js");
-const { IBinarying } = require("../utils/helperClasses.js");
-const { R8G8B8A8_SNORM, R8G8B8A8_UNORM } = require("../utils/normVec.js");
-const { Vec3 } = require("../utils/vector.js");
+const MeshoptDecoder = require("../../meshopt/meshopt_decoder.js");
+const MeshoptEncoder = require("../../meshopt/meshopt_encoder.js");
+const { WritableBinaryStream, ReadOnlyBinaryStream } = require("../../utils/binaryStream.js");
+const { IBinarying } = require("../../utils/helperClasses.js");
+const { R8G8B8A8_SNORM, R8G8B8A8_UNORM } = require("../../utils/normVec.js");
+const { Vec3 } = require("../../utils/vector.js");
 
 class LevelGeoMeshVertexMaterial extends IBinarying {
   constructor() {

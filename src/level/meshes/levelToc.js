@@ -1,5 +1,5 @@
-const { ReadOnlyBinaryStream } = require("../utils/binaryStream.js");
-const { IBinarying } = require("../utils/helperClasses.js");
+const { ReadOnlyBinaryStream } = require("../../utils/binaryStream.js");
+const { IBinarying } = require("../../utils/helperClasses.js");
 
 class LevelTocSegment {
   constructor(offset, byteLength) {

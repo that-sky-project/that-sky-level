@@ -1,4 +1,4 @@
-const { IBinarying } = require("../utils/helperClasses.js");
+const { IBinarying } = require("../../utils/helperClasses.js");
 
 class LevelLod extends IBinarying {
   constructor() {
