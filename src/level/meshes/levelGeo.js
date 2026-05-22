@@ -136,8 +136,8 @@ class LevelGeoChunk extends IBinarying {
   }
 
   fromStream(stream) {
-    this.vtxStart = stream.readUint32();
     this.idxStart = stream.readUint32();
+    this.vtxStart = stream.readUint32();
     this.subchunkStart = stream.readUint32();
 
     this.idxCount = stream.readUint16();
@@ -154,8 +154,8 @@ class LevelGeoChunk extends IBinarying {
   }
 
   toStream(stream) {
-    stream.writeUint32(this.vtxStart);
     stream.writeUint32(this.idxStart);
+    stream.writeUint32(this.vtxStart);
     stream.writeUint32(this.subchunkStart);
 
     stream.writeUint16(this.idxCount);
@@ -217,7 +217,7 @@ class LevelGeo extends IBinarying {
 
     // Read groups.
     this.chunks = [];
-    for (var i = 0; i < this.chunkCount; i++)
+    for (var i = 0; i < this.chunkCount + this.cloudChunkCount; i++)
       this.chunks.push(stream.readType(LevelGeoChunk));
 
     // Read areas.

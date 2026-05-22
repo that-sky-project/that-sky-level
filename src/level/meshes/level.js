@@ -17,6 +17,7 @@ class LevelDesc extends IBinarying {
     super();
 
     this.timeStamp = 0;
+    this.fileName = "";
     this.editor = "that-sky-level";
     this.editorVersion = [1, 0, 0];
     this.engineVersion = [0, 32, 2];
@@ -26,16 +27,18 @@ class LevelDesc extends IBinarying {
     var buffer = stream.readBytes(stream.getRemain())
       , nbt = NBT.Reader(toArrayBuffer(buffer), { littleEndian: true });
 
-    this.timeStamp = nbt["u32>timeStamp"];
-    this.editor = nbt["str>editor"];
-    this.editorVersion = nbt["list>editorVersion"].slice(1, 4);
-    this.engineVersion = nbt["list>engineVersion"].slice(1, 4);
+    this.timeStamp = nbt["comp>"]?.["u32>timeStamp"] || 0;
+    this.fileName = nbt["comp>"]?.["str>fileName"] || "";
+    this.editor = nbt["comp>"]?.["str>editor"] || "";
+    this.editorVersion = nbt["comp>"]["list>editorVersion"]?.slice(1, 4) || [0, 0, 0];
+    this.engineVersion = nbt["comp>"]["list>engineVersion"]?.slice(1, 4) || [0, 0, 0];
   }
 
   toStream(stream) {
     var nbt = NBT.create(false);
 
     nbt["u32>timeStamp"] = this.timeStamp;
+    nbt["str>fileName"] = this.fileName;
     nbt["str>editor"] = this.editor;
     nbt["list>editorVersion"] = ["i32"].concat(this.editorVersion);
     nbt["list>engineVersion"] = ["i32"].concat(this.engineVersion);
