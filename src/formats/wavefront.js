@@ -1,8 +1,10 @@
+const { R8G8B8A8_SNORM } = require("../utils/normVec.js");
 const { Vec3 } = require("../utils/vector");
 const {
   TriangleMesh,
   TriangleMeshVertex,
   TriangleMeshMaterial,
+  TriangleMeshMaterialBarn,
   TriangleMeshFace
 } = require("./triangleMesh.js");
 
@@ -14,13 +16,15 @@ const {
  * triangle). If no usemtl is given, "" is used.
  * 
  * @param {string} objStr 
+ * @param {TriangleMeshMaterialBarn} materialBarn 
  */
-function parseObj(objStr) {
+function parseObj(objStr, materialBarn) {
   // Split the file content into lines.
   var lines = objStr.split("\n")
     // Storage for raw vertex positions and normals.
     , positions = []
     , normals = []
+    , positionRefs = []
     // Current material name, defaults to "".
     , currentMtl = ""
     // Map from combined position/normal keys to vertex indices.
@@ -41,18 +45,19 @@ function parseObj(objStr) {
 
     if (keyword === "v") {
       // Store a vertex position.
-      positions.push([
+      positionRefs[positions.length] = new Set();
+      positions.push(new Vec3(
         parseFloat(parts[1]),
         parseFloat(parts[2]),
         parseFloat(parts[3])
-      ]);
+      ));
     } else if (keyword === "vn") {
       // Store a vertex normal.
-      normals.push([
+      normals.push(new R8G8B8A8_SNORM(
         parseFloat(parts[1]),
         parseFloat(parts[2]),
         parseFloat(parts[3])
-      ]);
+      ));
     } else if (keyword === "usemtl") {
       // Switch active material.
       currentMtl = parts[1] || "";
@@ -84,20 +89,34 @@ function parseObj(objStr) {
           : "none";
         var key = posIdx + "," + normKey;
 
-        // Add a new vertex if the pair hasn"t been seen.
+        // Add a new vertex if the pair hasn't been seen.
         if (!vertexMap.hasOwnProperty(key)) {
-          var pos = positions[posIdx - 1] || [0, 0, 0];
-          var norm = (normIdx !== null && normals[normIdx - 1])
-            ? normals[normIdx - 1]
-            : [0, 0, 0];
+          if (posIdx - 1 > positions.length)
+            throw new Error("encountered invalid vertex pos");
+          if (normIdx - 1 > normals.length)
+            throw new Error("encountered invalid vertex normal");
+
+          var pos = positions[posIdx - 1]
+            , posRef = positionRefs[posIdx - 1]
+            , norm = (normIdx !== null && normals[normIdx - 1])
+              ? normals[normIdx - 1]
+              : [0, 1, 0];
+
+          var vtx = new TriangleMeshVertex(pos, norm);
+          vtx.nearby = posRef;
+
           vertexMap[key] = vertices.length;
-          vertices.push({ position: pos, normal: norm });
+          posRef.add(vtx);
+          vertices.push(vtx);
         }
         // Record the index for the face.
         faceIndices.push(vertexMap[key]);
       }
       // Store the face with its material.
-      faces.push({ material: material, indices: faceIndices });
+      var face = new TriangleMeshFace();
+      face.indices = faceIndices;
+      face.materialRef = materialBarn.tryAddMaterial(material);
+      faces.push(face);
     }
     // Other OBJ keywords (vt, g, o, s, mtllib, etc.) are ignored.
   }
@@ -115,23 +134,12 @@ class WavefrontObj extends TriangleMesh {
    * @param {Buffer} fileBuffer 
    */
   fromFileBuffer(fileBuffer) {
-    var raw = parseObj(fileBuffer)
-      , self = this;
-
     this.clear();
 
-    this.vtxBuffer = raw.vertices.map(function (v) {
-      return new TriangleMeshVertex(
-        new Vec3(v.position[0], v.position[1], v.position[2]),
-        new Vec3(v.normal[0], v.normal[1], v.normal[2])
-      )
-    });
-    this.cmdBuffer = raw.faces.map(function (f) {
-      var result = new TriangleMeshFace();
-      result.indices = f.indices;
-      result.materialRef = self.materials.tryAddMaterial(f.material);
-      return result;
-    });
+    var raw = parseObj(fileBuffer.toString("uit-8"), this.materials);
+
+    this.vtxBuffer = raw.vertices;
+    this.cmdBuffer = raw.faces;
   }
 }
 

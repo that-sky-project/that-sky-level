@@ -225,7 +225,7 @@ class LevelCvt {
             geoVtx.material = geoMat;
 
             // input2/3/4 are currently unknown, use default values instead.
-            geoVtx.input2 = new R8G8B8A8_UNORM(0.99, 0.99, 0.99, 0.99);
+            geoVtx.input2 = new R8G8B8A8_UNORM(0.99, 0.1, 0.99, 0.99);
             geoVtx.input3 = new R8G8B8A8_UNORM(0.5, 0.5, 0.5, 0.5);
             geoVtx.input4 = new R8G8B8A8_UNORM(0.04, 0.004, 0.004, 0.004);
 

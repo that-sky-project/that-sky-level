@@ -6,6 +6,7 @@ const MeshoptEncoder = require("./src/meshopt/meshopt_encoder.js");
 const { WavefrontObj } = require("./src/formats/wavefront.js");
 const { LevelCvt } = require("./src/level/convert.js");
 const { LevelMeshes } = require("./src/level/meshes/level.js");
+const { LevelCvtAdjacency } = require("./src/level/adjacency.js");
 
 const kEngineVersion = [0, 32, 2];
 const kEditorVersion = [1, 0, 0];
@@ -54,9 +55,10 @@ function setDesc(desc, inputFile) {
       throw new Error("no input files");
 
     var rawMesh = readModelFile(input)
-      , converter = new LevelCvt(rawMesh)
+      , converter = new LevelCvtAdjacency(rawMesh)
       , meshes = new LevelMeshes();
 
+    converter.initialize(rawMesh);
     meshes.geo = converter.convert();
     setDesc(meshes.desc, input);
     fs.writeFileSync(output, meshes.toFileBuffer());

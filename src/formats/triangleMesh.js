@@ -5,6 +5,8 @@ class TriangleMeshVertex {
   constructor(pos, normal) {
     this.pos = pos || new Vec3();
     this.normal = normal || new Vec3();
+    /** A list of vertices considered adjacent to the current vertex. */
+    this.nearby = new Set();
   }
 }
 
@@ -74,6 +76,7 @@ class TriangleMesh {
 module.exports = {
   TriangleMeshVertex,
   TriangleMeshMaterial,
+  TriangleMeshMaterialBarn,
   TriangleMeshFace,
   TriangleMesh
 };
