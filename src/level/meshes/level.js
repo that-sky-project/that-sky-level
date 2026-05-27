@@ -37,7 +37,7 @@ class LevelDesc extends IBinarying {
   toStream(stream) {
     var nbt = NBT.create(false);
 
-    nbt["u32>timeStamp"] = this.timeStamp;
+    nbt["i32>timeStamp"] = this.timeStamp;
     nbt["str>fileName"] = this.fileName;
     nbt["str>editor"] = this.editor;
     nbt["list>editorVersion"] = ["i32"].concat(this.editorVersion);
@@ -66,7 +66,8 @@ class LevelMeshes {
       throw new Error("magic number mismatch");
 
     this.fileVersion = stream.readUint32();
-    if (this.fileVersion != 0x3C)
+    // Accept 0x3C or 0x3D.
+    if (this.fileVersion < 0x3C)
       throw new Error("file version mismatch");
 
     var toc = stream.readType(LevelToc);
@@ -78,8 +79,13 @@ class LevelMeshes {
 
     if (toc.GEO0)
       this.geo = toc.GEO0.fromFileBuffer(buffer).readType(LevelGeo);
+    else
+      this.geo = void 0;
+
     if (toc.DESC)
       this.desc = toc.DESC.fromFileBuffer(buffer).readType(LevelDesc);
+    else
+      this.desc = void 0;
   }
 
   toFileBuffer() {

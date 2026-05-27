@@ -111,7 +111,7 @@ class LevelCvtAdjacencyChunk extends LevelGeoChunk {
    * @returns {boolean}
    */
   tryAddFace(face) {
-    if (this.idxBuffer.length + 3 > 765)
+    if (this.idxBuffer.length + 3 > 756)
       return false;
 
     var newVtxCount = [];
@@ -119,7 +119,7 @@ class LevelCvtAdjacencyChunk extends LevelGeoChunk {
       if (!this.vertices.has(vtx))
         newVtxCount++;
 
-    if (this.vtxBuffer.length + newVtxCount > 255)
+    if (this.vtxBuffer.length + newVtxCount > 252)
       return false;
 
     for (var vtx of face.vertices) {
@@ -203,21 +203,6 @@ class LevelCvtAdjacency {
       chunk.update();
       this.chunks.push(chunk);
     }
-    /*var chunk = this.assignChunk(unprocessedVtx.values().next().value, unprocessedVtx, visitedFace);
-    var chunk = this.assignChunk(unprocessedVtx.values().next().value, unprocessedVtx, visitedFace);
-    //var chunk = this.assignChunk(unprocessedVtx.values().next().value, unprocessedVtx, visitedFace);
-    chunk.update();
-    var test = "";
-    for (var vtx of chunk.vtxBuffer) {
-      test += `v ${vtx.pos.x} ${vtx.pos.y} ${vtx.pos.z}\n`;
-    }
-    for (var vtx of chunk.vtxBuffer) {
-      test += `vn ${vtx.normal.x} ${vtx.normal.y} ${vtx.normal.z}\n`;
-    }
-    for (var i = 0; i < chunk.idxBuffer.length; i += 3) {
-      test += `f ${chunk.idxBuffer[i] + 1}//${chunk.idxBuffer[i] + 1} ${chunk.idxBuffer[i + 1] + 1}//${chunk.idxBuffer[i + 1] + 1} ${chunk.idxBuffer[i + 2] + 1}//${chunk.idxBuffer[i + 2] + 1}\n`;
-    }
-    require("fs").writeFileSync("./xyz1.obj", test);*/
 
     var localIndices = []
       , vertices = []
@@ -234,7 +219,7 @@ class LevelCvtAdjacency {
         r.pos = vtx.pos;
         r.normal = vtx.normal;
         r.material.setMaterial(vtx.materialRef.getId(), 1);
-        r.input2 = new R8G8B8A8_UNORM(0.99, 0.1, 0.99, 0.99);
+        r.input2 = new R8G8B8A8_UNORM(0.99, 0.99, 0.99, 0.99);
         r.input3 = new R8G8B8A8_UNORM(0.5, 0.5, 0.5, 0.5);
         r.input4 = new R8G8B8A8_UNORM(0.04, 0.004, 0.004, 0.004);
         return r;
@@ -337,10 +322,10 @@ class LevelCvtAdjacency {
       subchunk.materialId = materialId;
       subchunk.triangleStart = 0;
       subchunk.triangleCount = chunk.idxBuffer.length / 3;
-      subchunk.triangleEnd = subchunk.triangleCount;
+      subchunk.triangleEnd = subchunk.triangleCount - 1;
       subchunk.vtxStart = 0;
-      subchunk.vtxEnd = chunk.vtxBuffer.length;
-      subchunk.vtxCount = subchunk.vtxEnd;
+      subchunk.vtxCount = chunk.vtxBuffer.length;
+      subchunk.vtxEnd = subchunk.vtxCount - 1;
 
       chunk.subBuffer.push(subchunk);
     }
