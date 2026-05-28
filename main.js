@@ -5,7 +5,7 @@ const MeshoptDecoder = require("./src/meshopt/meshopt_decoder.js");
 const MeshoptEncoder = require("./src/meshopt/meshopt_encoder.js");
 const { WavefrontObj } = require("./src/formats/wavefront.js");
 const { LevelCvt } = require("./src/level/convert.js");
-const { LevelMeshes } = require("./src/level/meshes/level.js");
+const { LevelMeshes } = require("./src/level/meshes/levelMeshes.js");
 const { LevelCvtAdjacency } = require("./src/level/adjacency.js");
 
 const kEngineVersion = [0, 32, 2];
