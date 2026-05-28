@@ -1,7 +1,9 @@
 dist/
 .vscode/
+.VSCodeCounter/
 levelBinary/
 models/
+parsed/
 docs/
 node_modules/
 

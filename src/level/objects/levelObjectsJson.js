@@ -243,6 +243,10 @@ class LevelObjectsJson {
       result.objects.push(o);
     }
 
+    result.header = {
+      numRefs: 1000
+    };
+
     return result.toFileBuffer();
   }
 }
