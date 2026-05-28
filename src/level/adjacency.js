@@ -9,7 +9,7 @@
  * TODO: Reduce the memory usage of the allocation.
  */
 
-const { kMaterial } = require("../enums/kMaterial.js");
+const { kMaterial } = require("./enums/kMaterial.js");
 const {
   TriangleMeshVertex,
   TriangleMeshFace,

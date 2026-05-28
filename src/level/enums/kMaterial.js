@@ -1,5 +1,5 @@
 module.exports = {
-  kMaterial: {
+  kMaterial: Object.freeze({
     None: 0,
     Transparent: 2,
     Void: 3,
@@ -35,5 +35,5 @@ module.exports = {
     GrassMoss: 51,
     Cloth: 52,
     Cloud: 80,
-  }
+  })
 };

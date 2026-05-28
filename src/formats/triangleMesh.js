@@ -1,4 +1,4 @@
-const { kMaterial } = require("../enums/kMaterial.js");
+const { kMaterial } = require("../level/enums/kMaterial.js");
 const { Vec3 } = require("../utils/vector.js");
 
 class TriangleMeshVertex {
