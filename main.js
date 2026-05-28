@@ -6,6 +6,7 @@ const MeshoptEncoder = require("./src/meshopt/meshopt_encoder.js");
 const { WavefrontObj } = require("./src/formats/wavefront.js");
 const { LevelMeshes } = require("./src/level/meshes/levelMeshes.js");
 const { LevelCvtAdjacency } = require("./src/level/adjacency.js");
+const { LevelObjectsJson } = require("./src/level/objects/levelObjectsJson.js");
 
 const kEngineVersion = [0, 32, 2];
 const kEditorVersion = [1, 0, 0];
@@ -17,6 +18,11 @@ const argv = arg({
   "--touch": Boolean,
   // Convert from .obj to .meshes
   "--convert": Boolean,
+  // Convert from .level.json to .level.bin
+  "--serialize": Boolean,
+  // Convert from .level.bin to .level.json
+  "--deserialize": Boolean,
+
   // Merge chunks to a single object.
   "-T": Boolean,
   // Input file.
@@ -158,6 +164,24 @@ function touchObject(meshes, merge) {
     console.log("\nConverted:");
     console.log("  Vertices: " + result.totalVtx);
     console.log("  Indices: " + result.totalIdx);
+  } else if (argv["--serialize"]) {
+    var input = argv["-i"]
+      , output = argv["-o"] || "./Objects.level.bin";
+
+    if (!input)
+      throw new Error("no input file");
+
+    var file = fs.readFileSync(input, "utf-8");
+    fs.writeFileSync(output, LevelObjectsJson.write(JSON.parse(file)));
+  } else if (argv["--deserialize"]) {
+    var input = argv["-i"]
+      , output = argv["-o"] || "./Objects.level.json";
+
+    if (!input)
+      throw new Error("no input file");
+
+    var file = fs.readFileSync(input);
+    fs.writeFileSync(output, JSON.stringify(LevelObjectsJson.read(file), null, 2));
   } else {
     console.log("that-sky-level");
     console.log("Copyright (c) 2026 That Sky Project");
@@ -167,6 +191,8 @@ function touchObject(meshes, merge) {
     console.log("Usage:");
     console.log("  node main.js --touch -i <meshes>");
     console.log("  node main.js --convert -i <model> -o <meshes> [-m <material_map>] [-T]");
+    console.log("  node main.js --serialize -i <json> -o <objects>");
+    console.log("  node main.js --deserialize -i <objects> -o <json>");
     console.log("  node main.js --help");
     return;
   }
