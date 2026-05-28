@@ -1,3 +1,14 @@
+/**
+ * Simple breadth first chunk allocation.
+ * 
+ * Copyright (c) 2026 That Sky Project
+ * 
+ * This program is released under LGPL 2.1, Refer to LICENSE for further
+ * informations.
+ * 
+ * TODO: Reduce the memory usage of the allocation.
+ */
+
 const { kMaterial } = require("../enums/kMaterial.js");
 const {
   TriangleMeshVertex,
@@ -17,6 +28,7 @@ const { Vec3 } = require("../utils/vector.js");
 
 class LevelCvtAdjacencyVertex extends TriangleMeshVertex {
   /**
+   * Create the vertex from another vertex.
    * @param {TriangleMeshVertex} vtx 
    */
   constructor(vtx) {
@@ -267,17 +279,22 @@ class LevelCvtAdjacency {
       , chunk = new LevelCvtAdjacencyChunk()
       , done = false;
 
+    // The first loop, iterates until the current chunk is fully allocated.
     while (!done) {
+      // Record the vertices selected when entering the loop this time.
       var nextLoopVtx = new Set();
+
+      // The second loop, iterates over the currently selected vertices.
       for (var vtx of recursiveVtx) {
         if (!unprocessedVtx.has(vtx))
+          // Skip processed vertices.
           continue;
 
         // The vertex is assigned, remove from the set.
         unprocessedVtx.delete(vtx);
 
-        // Select all faces associated with a vertex (and all vertices sharing the
-        // same coordinates).
+        // The third loop, select all faces associated with a vertex (and all
+        // vertices sharing the same coordinates).
         for (var face of selectFace(vtx)) {
           if (visitedFace.has(face))
             // Skip visited faces.
@@ -295,10 +312,16 @@ class LevelCvtAdjacency {
         }
 
         if (done)
+          // Break the loop if the chunk is done.
           break;
       }
 
       if (!done && !nextLoopVtx.size) {
+        // If the chunk is not yet fully allocated but there are no more contiguous
+        // vertices available for allocation, select a vertex from a new contiguous
+        // patch.
+        //
+        // If all vertices have already been allocated, return immediately.
         if (!unprocessedVtx.size)
           done = true;
         else

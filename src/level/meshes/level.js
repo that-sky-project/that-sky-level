@@ -98,12 +98,14 @@ class LevelMeshes {
       , contentCursor = contentStream.getLength();
 
     // Write DESC segment.
-    contentStream.writeType(this.desc);
-    toc.segments.set("DESC", new LevelTocSegment(
-      contentCursor + LevelMeshes.kHeaderLength,
-      contentStream.getLength() - contentCursor
-    ));
-    contentCursor = contentStream.getLength();
+    if (this.desc) {
+      contentStream.writeType(this.desc);
+      toc.segments.set("DESC", new LevelTocSegment(
+        contentCursor + LevelMeshes.kHeaderLength,
+        contentStream.getLength() - contentCursor
+      ));
+      contentCursor = contentStream.getLength();
+    }
 
     // Write LOD0 segment.
     contentStream.writeType(this.lod);
@@ -114,12 +116,14 @@ class LevelMeshes {
     contentCursor = contentStream.getLength();
 
     // Write GEO0 segment.
-    contentStream.writeType(this.geo);
-    toc.segments.set("GEO0", new LevelTocSegment(
-      contentCursor + LevelMeshes.kHeaderLength,
-      contentStream.getLength() - contentCursor
-    ));
-    contentCursor = contentStream.getLength();
+    if (this.geo) {
+      contentStream.writeType(this.geo);
+      toc.segments.set("GEO0", new LevelTocSegment(
+        contentCursor + LevelMeshes.kHeaderLength,
+        contentStream.getLength() - contentCursor
+      ));
+      contentCursor = contentStream.getLength();
+    }
 
     // Complete file header.
     levelStream.writeType(toc);
