@@ -1,0 +1,258 @@
+{
+  "classes": {
+    "Clump": {
+      "data": "arr>ref"
+    },
+    "Marker": {
+      "enabled": "raw>b01",
+      "scale": "raw>b16",
+      "quat": "raw>b16",
+      "pos": "raw>b16"
+    },
+    "AvatarSetPos": {
+      "autoStart": "raw>b01",
+      "randomGroundInMarker": "raw>b01",
+      "setLevelStartPosition": "raw>b01",
+      "onGround": "raw>b01",
+      "relMarker": "raw>ref",
+      "marker": "raw>ref",
+      "breakHandHold": "raw>b01",
+      "bstGuid": "raw>b04",
+      "killMomentum": "raw>b01"
+    },
+    "OnLevelStart": {
+      "autoStart": "raw>b01",
+      "onlyOnWorldLoad": "raw>b01",
+      "events": "raw>ref",
+      "skipOnWorldLoad": "raw>b01"
+    },
+    "MeditationArea": {
+      "transform": "raw>b64",
+      "spawnSeatDelay": "raw>b04",
+      "camCustomFadeIn": "raw>b04",
+      "enabled": "raw>b01",
+      "confirmHintText": "raw>str",
+      "dialogType": "raw>b01",
+      "spawnSeatTail": "raw>b01",
+      "needSit": "raw>b01",
+      "spawnSeatCameraDist": "raw>b04",
+      "goals": "raw>ref",
+      "meditationSound": "raw>str",
+      "holyAreas": "raw>ref",
+      "disableMergeWithAnyProgress": "raw>b01",
+      "onlyFireWhenLocalPresent": "raw>b01",
+      "fullBonus": "raw>b04",
+      "camCustomFadeOut": "raw>b04",
+      "localOnly": "raw>b01",
+      "confirmHintIcon": "raw>str",
+      "minimumLocalPresentTime": "raw>b04",
+      "altar": "raw>ref",
+      "minRequired": "raw>b04",
+      "type": "raw>b01",
+      "onSitPressed": "raw>ref",
+      "time": "raw>b04",
+      "spawnSeatFX": "raw>b01",
+      "progressObjs": "raw>ref",
+      "spawnSeatFXBrightnessMult": "raw>b04",
+      "sitIconOverride": "raw>str",
+      "keyFrame": "raw>ref",
+      "spawnSeatSFX": "raw>b01",
+      "onMenuConfirm": "raw>ref",
+      "onMenuCancel": "raw>ref",
+      "onComplete": "raw>ref",
+      "progressOut": "raw>ref"
+    },
+    "OnBubbleButton": {
+      "autoStart": "raw>b01",
+      "activeDistance": "raw>b04",
+      "buttonTarget": "raw>ref",
+      "useAvatar": "raw>b01",
+      "showInSharedSpaceEditMode": "raw>b01",
+      "fireOnce": "raw>b01",
+      "ignoreAllowUI": "raw>b01",
+      "displayDuration": "raw>b04",
+      "networkedOnHandhold": "raw>b01",
+      "iconName": "raw>str",
+      "priority": "raw>b04",
+      "events": "raw>ref",
+      "cooldownAfterPressed": "raw>b04"
+    },
+    "Enable": {
+      "autoStart": "raw>b01",
+      "objects": "raw>ref",
+      "killEvents": "raw>b01",
+      "enable": "raw>b01",
+      "bstGuid": "raw>b04",
+      "selectObjectRandomly": "raw>b01"
+    }
+  },
+  "objects": {
+    "OnLevelStart>OnLevelStart_Trigger": {
+      "autoStart": true,
+      "onlyOnWorldLoad": 0,
+      "events": "Clump>OnLevelStart_Listeners",
+      "skipOnWorldLoad": 0
+    },
+    "AvatarSetPos>EntryPoint": {
+      "autoStart": false,
+      "randomGroundInMarker": 0,
+      "setLevelStartPosition": 1,
+      "onGround": 1,
+      "relMarker": null,
+      "marker": "Marker>BstNode_3",
+      "breakHandHold": 0,
+      "bstGuid": 1,
+      "killMomentum": 0
+    },
+    "Marker>BstNode_3": {
+      "enabled": true,
+      "scale": {
+        "x": 1,
+        "y": 1,
+        "z": 1,
+        "w": 0
+      },
+      "quat": {
+        "x": 0,
+        "y": 0,
+        "z": 0,
+        "w": 1
+      },
+      "pos": {
+        "x": 0,
+        "y": 0.5,
+        "z": 0,
+        "w": 0
+      }
+    },
+    "Marker>Marker_2": {
+      "enabled": true,
+      "scale": {
+        "x": 1,
+        "y": 1,
+        "z": 1,
+        "w": 0
+      },
+      "quat": {
+        "x": 0,
+        "y": 0,
+        "z": 0,
+        "w": 1
+      },
+      "pos": {
+        "x": 0,
+        "y": 0.5,
+        "z": 0,
+        "w": 0
+      }
+    },
+    "Clump>OnLevelStart_Listeners": {
+      "data": [
+        "AvatarSetPos>EntryPoint"
+      ]
+    },
+    "Clump>MeditationEnd_1": {
+      "data": [
+        "AvatarSetPos>EntryPoint",
+        "Enable>EnableMeditation",
+        "OnBubbleButton>BstNode_1898217744"
+      ]
+    },
+    "Clump>MeditationAreaClump": {
+      "data": [
+        "MeditationArea>BstNode_100"
+      ]
+    },
+    "Enable>EnableMeditation": {
+      "autoStart": false,
+      "objects": "Clump>MeditationAreaClump",
+      "killEvents": 0,
+      "enable": 1,
+      "bstGuid": 1232312,
+      "selectObjectRandomly": 0
+    },
+    "MeditationArea>BstNode_100": {
+      "transform": {
+        "matrix": [
+          [
+            1,
+            0,
+            0,
+            0
+          ],
+          [
+            0,
+            1,
+            0,
+            0
+          ],
+          [
+            0,
+            0,
+            1,
+            0
+          ],
+          [
+            2,
+            0.05,
+            2,
+            1
+          ]
+        ],
+        "pos": {
+          "x": 2,
+          "y": 0.05,
+          "z": 2
+        }
+      },
+      "spawnSeatDelay": 0,
+      "camCustomFadeIn": -1,
+      "enabled": true,
+      "confirmHintText": "hint.meditation.test.1",
+      "dialogType": 0,
+      "spawnSeatTail": 1,
+      "needSit": 1,
+      "spawnSeatCameraDist": 0,
+      "goals": null,
+      "meditationSound": "Pray_Loop",
+      "holyAreas": null,
+      "disableMergeWithAnyProgress": 1,
+      "onlyFireWhenLocalPresent": 0,
+      "fullBonus": 2,
+      "camCustomFadeOut": -1,
+      "localOnly": 1,
+      "confirmHintIcon": "",
+      "minimumLocalPresentTime": 0,
+      "altar": null,
+      "minRequired": 0,
+      "type": 0,
+      "onSitPressed": null,
+      "time": 2,
+      "spawnSeatFX": 1,
+      "progressObjs": null,
+      "spawnSeatFXBrightnessMult": 1,
+      "sitIconOverride": "UiMenuPresent",
+      "keyFrame": null,
+      "spawnSeatSFX": 0,
+      "onMenuConfirm": null,
+      "onMenuCancel": null,
+      "onComplete": "Clump>MeditationEnd_1",
+      "progressOut": null
+    },
+    "OnBubbleButton>BstNode_1898217744": {
+      "autoStart": false,
+      "activeDistance": 3,
+      "buttonTarget": null,
+      "useAvatar": 1,
+      "showInSharedSpaceEditMode": 0,
+      "fireOnce": 0,
+      "ignoreAllowUI": 0,
+      "displayDuration": 0,
+      "networkedOnHandhold": 0,
+      "iconName": "UiMiscStarCluster",
+      "priority": 1,
+      "events": "Clump>OnLevelStart_Listeners",
+      "cooldownAfterPressed": 0
+    }
+  }
+}
