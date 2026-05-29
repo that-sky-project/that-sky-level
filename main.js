@@ -1,3 +1,4 @@
+const ps = require("process");
 const fs = require("fs");
 const pl = require("path");
 const arg = require("arg");
@@ -7,6 +8,7 @@ const { WavefrontObj } = require("./src/formats/wavefront.js");
 const { LevelMeshes } = require("./src/level/meshes/levelMeshes.js");
 const { LevelCvtAdjacency } = require("./src/level/adjacency.js");
 const { LevelObjectsJson } = require("./src/level/objects/levelObjectsJson.js");
+const { silence, printf } = require("./src/utils/logger.js");
 
 const kEngineVersion = [0, 32, 2];
 const kEditorVersion = [1, 0, 0];
@@ -29,10 +31,14 @@ const argv = arg({
   "-i": String,
   // Output file.
   "-o": String,
+  // Silence mode.
+  "-s": Boolean,
 
   "-h": "--help",
   "-T": "--touch",
   "-C": "--convert",
+  "-S": "--serialize",
+  "-D": "--deserialize",
 }, { permissive: true });
 
 function readModelFile(path) {
@@ -112,6 +118,8 @@ function touchObject(meshes, merge) {
   await MeshoptDecoder.ready;
   await MeshoptEncoder.ready;
 
+  silence(argv["-s"]);
+
   if (argv["--convert"]) {
     var input = argv["-i"]
       , output = argv["-o"] || "./BstBaked.meshes";
@@ -127,11 +135,11 @@ function touchObject(meshes, merge) {
     meshes.geo = converter.convert();
     setDesc(meshes.desc, input);
     fs.writeFileSync(output, meshes.toFileBuffer());
-    console.log("Converted:");
-    console.log("  Chunks: " + meshes.geo.chunkCount);
-    console.log("  Subchunks: " + meshes.geo.subchunkCount);
-    console.log("  Vertices: " + meshes.geo.vertexCount);
-    console.log("  Faces: " + meshes.geo.indexCount / 3);
+    printf("Converted:");
+    printf("  Chunks: " + meshes.geo.chunkCount);
+    printf("  Subchunks: " + meshes.geo.subchunkCount);
+    printf("  Vertices: " + meshes.geo.vertexCount);
+    printf("  Faces: " + meshes.geo.indexCount / 3);
     return;
   } else if (argv["--touch"]) {
     var input = argv["-i"]
@@ -141,18 +149,18 @@ function touchObject(meshes, merge) {
       throw new Error("no input file");
 
     var meshes = readMeshesFile(input);
-    console.log("File information:");
-    console.log("  Version: 0x" + meshes.fileVersion.toString(16));
+    printf("File information:");
+    printf("  Version: 0x" + meshes.fileVersion.toString(16));
     if (meshes.desc) {
-      console.log("  Editor: " + meshes.desc.editor);
-      console.log("  Editor version: " + meshes.desc.editorVersion);
-      console.log("  Timestamp: " + meshes.desc.timeStamp);
-      console.log("  Original file: " + meshes.desc.fileName);
+      printf("  Editor: " + meshes.desc.editor);
+      printf("  Editor version: " + meshes.desc.editorVersion);
+      printf("  Timestamp: " + meshes.desc.timeStamp);
+      printf("  Original file: " + meshes.desc.fileName);
     } else {
-      console.log("  Editor: -");
-      console.log("  Editor version: -");
-      console.log("  Timestamp: -");
-      console.log("  Original file: -");
+      printf("  Editor: -");
+      printf("  Editor version: -");
+      printf("  Timestamp: -");
+      printf("  Original file: -");
     }
 
     if (!output)
@@ -161,9 +169,9 @@ function touchObject(meshes, merge) {
     var result = touchObject(meshes, argv["-m"]);
 
     fs.writeFileSync(output, result.result);
-    console.log("\nConverted:");
-    console.log("  Vertices: " + result.totalVtx);
-    console.log("  Indices: " + result.totalIdx);
+    printf("\nConverted:");
+    printf("  Vertices: " + result.totalVtx);
+    printf("  Indices: " + result.totalIdx);
   } else if (argv["--serialize"]) {
     var input = argv["-i"]
       , output = argv["-o"] || "./Objects.level.bin";
@@ -183,17 +191,31 @@ function touchObject(meshes, merge) {
     var file = fs.readFileSync(input);
     fs.writeFileSync(output, JSON.stringify(LevelObjectsJson.read(file), null, 2));
   } else {
-    console.log("that-sky-level");
-    console.log("Copyright (c) 2026 That Sky Project");
-    console.log("<https://www.github.com/that-sky-project/that-sky-level>");
-    console.log(" - A Sky CotL level reader and writer.");
-    console.log("");
-    console.log("Usage:");
-    console.log("  node main.js --touch -i <meshes>");
-    console.log("  node main.js --convert -i <model> -o <meshes> [-m <material_map>] [-T]");
-    console.log("  node main.js --serialize -i <json> -o <objects>");
-    console.log("  node main.js --deserialize -i <objects> -o <json>");
-    console.log("  node main.js --help");
+    printf("that-sky-level");
+    printf("Copyright (c) 2026 That Sky Project");
+    printf("<https://www.github.com/that-sky-project/that-sky-level>");
+    printf(" - A Sky CotL level reader and writer.");
+    printf("");
+    printf("Usage:");
+    printf("  node main.js --touch -i <meshes>");
+    printf("  node main.js --convert -i <model> -o <meshes> [-m <material_map>] [-T]");
+    printf("  node main.js --serialize -i <json> -o <objects>");
+    printf("  node main.js --deserialize -i <objects> -o <json>");
+    printf("  node main.js --help");
+    printf("");
+    printf("Options:");
+    printf("  --touch, -T         Convert from .meshes to .obj");
+    printf("  --convert, -C       Convert from .obj to .meshes");
+    printf("  --serialize, -S     Convert from .level.json to .level.bin");
+    printf("  --deserialize, -D   Convert from .level.v to .level.json");
+    printf("  --help, -h          Show this help");
+    printf("  -i <file>           Input file");
+    printf("  -o <file>           Output file");
+    printf("  -s                  Disable logger");
+    printf("  -m                  Merge chunks when exporting to .obj");
     return;
   }
-}().catch(e => console.error(e.message || e));
+}().catch(e => {
+  printf("tslevel: §c§lerror: §r%0", e.message || "" + e);
+  ps.exit(1);
+});
