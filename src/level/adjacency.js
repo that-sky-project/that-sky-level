@@ -93,7 +93,6 @@ class LevelCvtAdjacencyChunk extends LevelGeoChunk {
     super();
 
     this.vertices = new Map();
-    this.materials = new Set();
     this.activeSubchunks = new Map();
     this.idxBuffer = [];
     this.vtxBuffer = [];
@@ -195,6 +194,40 @@ class LevelCvtAdjacencyChunk extends LevelGeoChunk {
    * @param {LevelCvtAdjacencyFace} face 
    * @returns {boolean}
    */
+  tryAssignActiveSubchunk2(face) {
+    function addMaterial(material) {
+      if (!self.activeSubchunks.has(material)) {
+        var subchunk = new LevelCvtAdjacencySubchunk();
+        self.beginSubchunk(subchunk, material);
+        self.activeSubchunks.set(material, subchunk);
+      }
+    }
+
+    var self = this;
+
+    // Remove sub-chunks that specify materials not present on the current
+    // face from active list.
+    for (var m of this.activeSubchunks.keys()) {
+      if (
+        m == face.vertices[0].materialRef
+        || m == face.vertices[1].materialRef
+        || m == face.vertices[2].materialRef
+      ) {
+        this.activeSubchunks.get(m).triangleCount++;
+      }
+    }
+
+    addMaterial(face.vertices[0].materialRef);
+    addMaterial(face.vertices[1].materialRef);
+    addMaterial(face.vertices[2].materialRef);
+
+    return true;
+  }
+
+  /**
+   * @param {LevelCvtAdjacencyFace} face 
+   * @returns {boolean}
+   */
   tryAddFace(face) {
     if (this.idxBuffer.length + 3 > 756)
       return false;
@@ -220,8 +253,9 @@ class LevelCvtAdjacencyChunk extends LevelGeoChunk {
         idx = this.vertices.get(vtx);
       }
       this.idxBuffer.push(idx);
-      this.materials.add(vtx.materialRef);
     }
+
+    //this.tryAssignActiveSubchunk2(face);
 
     return true;
   }

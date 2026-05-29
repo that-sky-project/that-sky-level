@@ -4,7 +4,7 @@ dist/
 levelBinary/
 models/
 parsed/
-docs/
+docs/old/
 node_modules/
 
 *.meshes

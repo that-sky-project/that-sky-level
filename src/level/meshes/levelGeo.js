@@ -72,15 +72,23 @@ class LevelGeoSubchunk extends IBinarying {
   constructor() {
     super();
 
+    // The material id of the subchunk.
     this.materialId = 0;
 
+    // Avaliable face count.
     this.triangleCount = 0;
+    // Avaliable vertex count.
     this.vtxCount = 0;
 
-    // Indices index / 3.
+    // 3 indices per triangle. The triangle range [triangleStart, triangleEnd],
+    // i.e. index range [triangleStart * 3, triangleEnd * 3] will be processed
+    // by the game, and extract `triangleCount` avaliable faces has the material
+    // specified by `materialId`.
     this.triangleStart = 0;
     this.triangleEnd = 0;
 
+    // Like the triangle range modifier, the vertex range [vtxStart, vtxEnd]
+    // will be processed and extract `vtxCount` vertices at most.
     this.vtxStart = 0;
     this.vtxEnd = 0;
   }
@@ -123,6 +131,12 @@ class LevelGeoChunk extends IBinarying {
   constructor() {
     super();
 
+    // These three pairs of values specify the subarray ranges that the chunk
+    // decompresses from the global sub-chunk, vertex, and index arrays, i.e.
+    // the resource range used by this chunk.
+    //
+    // All sub-chunks of a chunk use indices within the chunk's subarray, not
+    // global array indices.
     this.vtxStart = 0;
     this.idxStart = 0;
     this.subchunkStart = 0;
@@ -131,6 +145,8 @@ class LevelGeoChunk extends IBinarying {
     this.vtxCount = 0;
     this.subchunkCount = 0;
 
+    // The AABB bounding box of the chunk, used for collision calculation. All
+    // faces outside this bounding box have no collision volume.
     this.min = new Vec3();
     this.max = new Vec3();
   }
