@@ -2,8 +2,10 @@
 A simple level converter for Sky:CotL `BstBaked.meshes` version 0x3C or 0x3D, and a incomplete converter for `Objects.level.bin` version 0x01.
 
 ## TODO
-1. ❌Supports cloud rendering and collision.
-2. ❌Supports 0x3D version of `.meshes`.
+1. ❌Optimize performance (memory usage, subchunk allocation) of the `.meshes` converter.
+1. ❌Support complex materials.
+1. ❌Support cloud rendering and collision.
+2. ❌Support 0x3D version of `.meshes`.
 3. ❌Fix incorrect object reference of `.level.bin`.
 
 ## Usage
