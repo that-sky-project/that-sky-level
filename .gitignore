@@ -18,4 +18,6 @@ node_modules/
 *.bak
 test*
 
+!level_example/*/*.obj
+
 package-lock.json

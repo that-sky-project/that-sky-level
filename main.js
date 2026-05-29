@@ -24,7 +24,7 @@ const argv = arg({
   "--deserialize": Boolean,
 
   // Merge chunks to a single object.
-  "-T": Boolean,
+  "-m": Boolean,
   // Input file.
   "-i": String,
   // Output file.
@@ -158,7 +158,7 @@ function touchObject(meshes, merge) {
     if (!output)
       return;
 
-    var result = touchObject(meshes, argv["-T"]);
+    var result = touchObject(meshes, argv["-m"]);
 
     fs.writeFileSync(output, result.result);
     console.log("\nConverted:");

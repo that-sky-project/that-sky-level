@@ -94,12 +94,42 @@ class LevelCvtAdjacencyChunk extends LevelGeoChunk {
 
     this.vertices = new Map();
     this.materials = new Set();
+    this.activeSubchunks = new Map();
     this.idxBuffer = [];
     this.vtxBuffer = [];
     this.subBuffer = [];
   }
 
-  update() {
+  /**
+   * @param {LevelCvtAdjacencySubchunk} subchunk 
+   * @param {TriangleMeshMaterial} material 
+   */
+  beginSubchunk(subchunk, material) {
+    subchunk.materialId = material.getId() || kMaterial.Cliff;
+    subchunk.triangleStart = this.idxBuffer.length / 3;
+    subchunk.triangleCount = 1;
+    subchunk.vtxStart = 0;
+  }
+
+  /**
+   * @param {LevelCvtAdjacencySubchunk} subchunk 
+   */
+  endSubchunk(subchunk) {
+    subchunk.triangleEnd = subchunk.triangleStart + subchunk.triangleCount - 1;
+    subchunk.vtxCount = this.vtxBuffer.length;
+    subchunk.vtxEnd = subchunk.vtxStart + subchunk.vtxCount - 1;
+  }
+
+  /**
+   * Mark the chunk as allocated.
+   */
+  done() {
+    for (var subchunk of this.activeSubchunks.values()) {
+      this.endSubchunk(subchunk);
+      this.subBuffer.push(subchunk);
+    }
+    this.activeSubchunks.clear();
+
     this.idxCount = this.idxBuffer.length;
     this.vtxCount = this.vtxBuffer.length;
     this.subchunkCount = this.subBuffer.length;
@@ -119,6 +149,49 @@ class LevelCvtAdjacencyChunk extends LevelGeoChunk {
   }
 
   /**
+   * TODO: Support multi-material of single vertex.
+   * @param {LevelCvtAdjacencyFace} face 
+   * @returns {boolean}
+   */
+  tryAssignActiveSubchunk(face) {
+    function addMaterial(material) {
+      if (!self.activeSubchunks.has(material)) {
+        var subchunk = new LevelCvtAdjacencySubchunk();
+        self.beginSubchunk(subchunk, material);
+        self.activeSubchunks.set(material, subchunk);
+      }
+    }
+
+    var self = this;
+
+    if (this.subBuffer.length + this.activeSubchunks.size > 252)
+      return false;
+
+    // Remove sub-chunks that specify materials not present on the current
+    // face from active list.
+    for (var m of this.activeSubchunks.keys()) {
+      if (
+        m != face.vertices[0].materialRef
+        && m != face.vertices[1].materialRef
+        && m != face.vertices[2].materialRef
+      ) {
+        var subchunk = this.activeSubchunks.get(m);
+        this.endSubchunk(subchunk);
+        this.subBuffer.push(subchunk);
+        this.activeSubchunks.delete(m);
+      } else {
+        this.activeSubchunks.get(m).triangleCount++;
+      }
+    }
+
+    addMaterial(face.vertices[0].materialRef);
+    addMaterial(face.vertices[1].materialRef);
+    addMaterial(face.vertices[2].materialRef);
+
+    return true;
+  }
+
+  /**
    * @param {LevelCvtAdjacencyFace} face 
    * @returns {boolean}
    */
@@ -132,6 +205,9 @@ class LevelCvtAdjacencyChunk extends LevelGeoChunk {
         newVtxCount++;
 
     if (this.vtxBuffer.length + newVtxCount > 252)
+      return false;
+
+    if (!this.tryAssignActiveSubchunk(face))
       return false;
 
     for (var vtx of face.vertices) {
@@ -205,14 +281,17 @@ class LevelCvtAdjacency {
    * Assign vertices into chunks.
    */
   convert() {
-    var unprocessedVtx = new Set(this.meshVtx)
+    var loop = new Set()
+      , unprocessedVtx = new Set(this.meshVtx)
       , visitedFace = new Set()
       , geo = new LevelGeo();
 
+    loop.add(unprocessedVtx.values().next().value);
+
     while (unprocessedVtx.size) {
-      var chunk = this.assignChunk(unprocessedVtx.values().next().value, unprocessedVtx, visitedFace);
-      this.assignSubChunk(chunk);
-      chunk.update();
+      var chunk = this.assignChunk(loop, unprocessedVtx, visitedFace);
+      //this.assignSubChunk(chunk);
+      chunk.done();
       this.chunks.push(chunk);
     }
 
@@ -255,12 +334,12 @@ class LevelCvtAdjacency {
   }
 
   /**
-   * @param {LevelCvtAdjacencyVertex} start 
+   * @param {Set<LevelCvtAdjacencyVertex>} start 
    * @param {Set<LevelCvtAdjacencyVertex>} unprocessedVtx 
    * @param {Set<LevelCvtAdjacencyFace>} visitedFace
    * @returns {LevelCvtAdjacencyChunk}
    */
-  assignChunk(start, unprocessedVtx, visitedFace) {
+  assignChunk(start, unprocessedVtx, visitedFace, nextLoopVtx) {
     function updateNextLoop(nextLoopVtx, face) {
       unprocessedVtx.has(face.vertices[0]) && nextLoopVtx.add(face.vertices[0]);
       unprocessedVtx.has(face.vertices[1]) && nextLoopVtx.add(face.vertices[1]);
@@ -275,7 +354,7 @@ class LevelCvtAdjacency {
       return faces;
     }
 
-    var recursiveVtx = new Set([start])
+    var recursiveVtx = new Set(start)
       , chunk = new LevelCvtAdjacencyChunk()
       , done = false;
 
@@ -328,30 +407,19 @@ class LevelCvtAdjacency {
           nextLoopVtx.add(unprocessedVtx.values().next().value);
       }
 
+      // Update the vertex list for the next iteration.
       recursiveVtx = nextLoopVtx;
     }
 
-    return chunk;
-  }
-
-  /**
-   * @param {LevelCvtAdjacencyChunk} chunk 
-   */
-  assignSubChunk(chunk) {
-    for (var material of chunk.materials) {
-      var subchunk = new LevelCvtAdjacencySubchunk()
-        , materialId = kMaterial[material.name.substring(10)] || kMaterial.Cliff;
-
-      subchunk.materialId = materialId;
-      subchunk.triangleStart = 0;
-      subchunk.triangleCount = chunk.idxBuffer.length / 3;
-      subchunk.triangleEnd = subchunk.triangleCount - 1;
-      subchunk.vtxStart = 0;
-      subchunk.vtxCount = chunk.vtxBuffer.length;
-      subchunk.vtxEnd = subchunk.vtxCount - 1;
-
-      chunk.subBuffer.push(subchunk);
+    if (nextLoopVtx.size) {
+      // If contiguous vertices remain but the current chunk is fully allocated,
+      // record them for the next chunk.
+      start.clear();
+      for (var v of nextLoopVtx)
+        start.add(v);
     }
+
+    return chunk;
   }
 }
 
