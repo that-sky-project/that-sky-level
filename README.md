@@ -8,6 +8,11 @@ A simple level converter for Sky:CotL `BstBaked.meshes` version 0x3C or 0x3D, an
 2. ❌Support 0x3D version of `.meshes`.
 3. ❌Fix incorrect object reference of `.level.bin`.
 
+## Installation
+```sh
+npm i @that-sky-project/that-sky-level -g
+```
+
 ## Usage
 ### Convert from `.obj` to `.meshes`
 Before using the software, the Wavefront .obj file should be prepared. It's recommended to build files with Blender.
