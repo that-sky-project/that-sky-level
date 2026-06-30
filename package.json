@@ -1,6 +1,6 @@
 {
   "name": "@that-sky-project/that-sky-level",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "dependencies": {
     "@htmonkeyg/tformat": "^1.0.1",
     "arg": "^5.0.2",
