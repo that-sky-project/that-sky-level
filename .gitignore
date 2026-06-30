@@ -6,6 +6,8 @@ models/
 parsed/
 docs/old/
 node_modules/
+bak/
+bak.*/
 
 *.meshes
 *.bin
