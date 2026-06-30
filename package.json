@@ -19,11 +19,26 @@
     "build": "npx webpack"
   },
   "bin": {
-    "tslevel": "./dist/cli.js"
+    "tslevel": "dist/cli.js"
   },
   "devDependencies": {
     "terser-webpack-plugin": "^5.6.1",
     "webpack": "^5.108.3",
     "webpack-cli": "^7.1.0"
-  }
+  },
+  "description": "A simple level converter for Sky:CotL level binaries.",
+  "main": "main.js",
+  "directories": {
+    "doc": "docs"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/that-sky-project/that-sky-level.git"
+  },
+  "author": "That Sky Project",
+  "license": "AGPL-3.0-or-later",
+  "bugs": {
+    "url": "https://github.com/that-sky-project/that-sky-level/issues"
+  },
+  "homepage": "https://github.com/that-sky-project/that-sky-level#readme"
 }
