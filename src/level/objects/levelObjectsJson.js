@@ -46,7 +46,11 @@ class LevelObjectsJson {
       for (var i = clazz.firstMemVar; i < clazz.firstMemVar + clazz.numMemVars; i++) {
         var memVar = objects.memVars[i];
         if (memVar.varType === 0)
-          classDef[memVar.name] = "raw>b" + memVar.size.toString().padStart(2, "0");
+          // 4-byte numerics carry an explicit encoding (f32/i32/u32) so the
+          // writer can reproduce exact bytes; other sizes keep raw>bNN.
+          classDef[memVar.name] = memVar.size === 4
+            ? "raw>" + (memVar.enc || "f32")
+            : "raw>b" + memVar.size.toString().padStart(2, "0");
         else if (memVar.varType === 1)
           classDef[memVar.name] = "raw>str";
         else if (memVar.varType === 2)
@@ -162,6 +166,15 @@ class LevelObjectsJson {
             "size": 0,
             "extra": 0
           });
+        } else if (memVarDef === "raw>f32" || memVarDef === "raw>i32" || memVarDef === "raw>u32") {
+          // 4-byte numeric with explicit encoding (byte-exact round-trip).
+          memVars.push({
+            "varType": 0,
+            "name": memVarName,
+            "size": 4,
+            "extra": 0,
+            "enc": memVarDef.substring(4)
+          });
         } else if (memVarDef.startsWith("raw>b")) {
           // Raw bytes type.
           var size = Number.parseInt(memVarDef.substring(5));
@@ -243,8 +256,10 @@ class LevelObjectsJson {
       result.objects.push(o);
     }
 
+    // numRefs is computed exactly by toFileBuffer() from the actual number of
+    // object-pointer slots written; it must not be guessed.
     result.header = {
-      numRefs: 1000
+      version: 1
     };
 
     return result.toFileBuffer();

@@ -170,6 +170,12 @@ class Tgcl {
     }
 
     // ── 5. Objects section ────────────────────────────────────────────────────
+    // Count every object-pointer slot written (OBJECT_PTR fields and every
+    // element of a ref-array, in top-level AND inline sub-objects). The game
+    // sizes its reference fixup table from the header's numRefs and runs its
+    // final pointer-resolution pass exactly numRefs times, so this must be the
+    // exact total or references are left unresolved / the loader over-reads.
+    this._refCount = 0;
     const objectParts = this.objects.map(obj => this._serializeObject(obj));
     const objectsBuf = Buffer.concat(objectParts);
 
@@ -182,7 +188,7 @@ class Tgcl {
     headerBuf.writeUInt32LE(this.types.length, 8);
     headerBuf.writeUInt32LE(this.memVars.length, 12);
     headerBuf.writeUInt32LE(this.objects.length, 16);
-    headerBuf.writeUInt32LE(this.header?.numRefs ?? 0, 20);
+    headerBuf.writeUInt32LE(this._refCount >>> 0, 20);
     headerBuf.writeUInt32LE(typesOffset, 24);
     headerBuf.writeUInt32LE(memVarsOffset, 28);
     headerBuf.writeUInt32LE(dataOffset, 32);
@@ -350,7 +356,7 @@ class Tgcl {
 
       case VAR_TYPE.NORMAL:
       default:
-        return this._readNormalValue(pos, memVar.size, memVar.name);
+        return this._readNormalValue(pos, memVar);
     }
   }
 
@@ -412,8 +418,9 @@ class Tgcl {
     };
   }
 
-  _readNormalValue(pos, size, name) {
+  _readNormalValue(pos, memVar) {
     const buf = this._buf;
+    const size = memVar.size, name = memVar.name;
     let value;
 
     switch (size) {
@@ -423,18 +430,24 @@ class Tgcl {
         break;
 
       case 4:
-        if (isUInt32Name(name)) {
-          value = buf.readUInt32LE(pos);
-        } else {
-          const intVal = buf.readInt32LE(pos);
-          const floatVal = buf.readFloatLE(pos);
-          // Prefer float when the float interpretation is "reasonable".
-          value =
-            (Math.abs(floatVal) < 1e10 && Math.abs(floatVal) > 1e-10) ||
-              floatVal === 0
-              ? floatVal
-              : intVal;
+        // Decide the field's numeric encoding once and remember it on the
+        // memVar, so write-back reproduces the exact bytes. The file only
+        // records a field's size, not whether it is int or float; a per-field
+        // (not per-value) decision keeps every object of a type consistent.
+        if (!memVar.enc) {
+          if (isUInt32Name(name)) {
+            memVar.enc = 'u32';
+          } else {
+            const f = buf.readFloatLE(pos);
+            memVar.enc =
+              ((Math.abs(f) < 1e10 && Math.abs(f) > 1e-10) || f === 0)
+                ? 'f32'
+                : 'i32';
+          }
         }
+        if (memVar.enc === 'u32') value = buf.readUInt32LE(pos);
+        else if (memVar.enc === 'i32') value = buf.readInt32LE(pos);
+        else value = buf.readFloatLE(pos);
         break;
 
       case 8:
@@ -549,11 +562,13 @@ class Tgcl {
 
       case VAR_TYPE.NORMAL:
       default:
-        return this._writeNormalValue(value, memVar.size, memVar.name);
+        return this._writeNormalValue(value, memVar);
     }
   }
 
   _writeObjectPtrValue(value) {
+    // Every OBJECT_PTR slot (including null) is queued as a reference fixup.
+    this._refCount = (this._refCount || 0) + 1;
     const buf = Buffer.allocUnsafe(4);
     if (value == null) {
       buf.writeInt32LE(-1);
@@ -579,6 +594,8 @@ class Tgcl {
 
     // ── Ref array ────────────────────────────────────────────────────────────
     if (elementTypeIdx === 0xFFFFFFFF) {
+      // Every element is queued as a reference fixup (including nulls).
+      this._refCount = (this._refCount || 0) + items.length;
       const buf = Buffer.allocUnsafe(4 + items.length * 4);
       buf.writeUInt32LE(items.length, 0);
       for (let i = 0; i < items.length; i++) {
@@ -611,7 +628,8 @@ class Tgcl {
     return fallback;
   }
 
-  _writeNormalValue(value, size, name) {
+  _writeNormalValue(value, memVar) {
+    const size = memVar.size, name = memVar.name;
     const buf = Buffer.allocUnsafe(size);
     const n = typeof value === 'number' ? value : 0;
 
@@ -625,10 +643,18 @@ class Tgcl {
         break;
 
       case 4:
-        if (isUInt32Name(name)) {
-          buf.writeUInt32LE(n >>> 0); // treat as unsigned
+        // Honour the field's recorded numeric encoding for byte-exact output.
+        // Fall back to the legacy heuristic only when enc is absent (e.g. a
+        // hand-authored `raw>b04` field with no encoding hint).
+        if (memVar.enc === 'u32') {
+          buf.writeUInt32LE(n >>> 0);
+        } else if (memVar.enc === 'i32') {
+          buf.writeInt32LE(n | 0);
+        } else if (memVar.enc === 'f32') {
+          buf.writeFloatLE(n);
+        } else if (isUInt32Name(name)) {
+          buf.writeUInt32LE(n >>> 0);
         } else {
-          // Reproduce the float-vs-int decision made at read time.
           encode4ByteNormal(buf, 0, n);
         }
         break;

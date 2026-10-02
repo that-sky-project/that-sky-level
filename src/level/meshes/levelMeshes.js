@@ -54,7 +54,7 @@ class LevelMeshes {
   constructor() {
     this.fileVersion = 0x3C;
     this.desc = new LevelDesc();
-    this.lod = new LevelLod();
+    this.lods = [new LevelLod()];
     this.geo = new LevelGeo();
   }
 
@@ -72,14 +72,22 @@ class LevelMeshes {
 
     var toc = stream.readType(LevelToc);
 
-    if (toc.LOD0)
-      this.lod = toc.LOD0.fromFileBuffer(buffer).readType(LevelLod);
-    else
+    // Read all LOD segments (LOD0..LODn).
+    this.lods = [];
+    for (var i = 0; ; i++) {
+      var lodSeg = toc.segments.get("LOD" + i);
+      if (!lodSeg)
+        break;
+      this.lods.push(lodSeg.fromFileBuffer(buffer).readType(LevelLod));
+    }
+    if (!this.lods.length)
       throw new Error("level did not baked lod.");
 
-    if (toc.GEO0)
-      this.geo = toc.GEO0.fromFileBuffer(buffer).readType(LevelGeo);
-    else
+    if (toc.GEO0) {
+      this.geo = new LevelGeo();
+      this.geo.fileVersion = this.fileVersion;
+      this.geo.fromStream(toc.GEO0.fromFileBuffer(buffer));
+    } else
       this.geo = void 0;
 
     if (toc.DESC)
@@ -107,16 +115,20 @@ class LevelMeshes {
       contentCursor = contentStream.getLength();
     }
 
-    // Write LOD0 segment.
-    contentStream.writeType(this.lod);
-    toc.segments.set("LOD0", new LevelTocSegment(
-      contentCursor + LevelMeshes.kHeaderLength,
-      contentStream.getLength() - contentCursor
-    ));
-    contentCursor = contentStream.getLength();
+    // Write LOD segments (LOD0..LODn) consecutively so their TOC offsets are
+    // contiguous (the loader validates each LOD start == prev start + prev len).
+    for (var i = 0; i < this.lods.length; i++) {
+      contentStream.writeType(this.lods[i]);
+      toc.segments.set("LOD" + i, new LevelTocSegment(
+        contentCursor + LevelMeshes.kHeaderLength,
+        contentStream.getLength() - contentCursor
+      ));
+      contentCursor = contentStream.getLength();
+    }
 
     // Write GEO0 segment.
     if (this.geo) {
+      this.geo.fileVersion = this.fileVersion;
       contentStream.writeType(this.geo);
       toc.segments.set("GEO0", new LevelTocSegment(
         contentCursor + LevelMeshes.kHeaderLength,

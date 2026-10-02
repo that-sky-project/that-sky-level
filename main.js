@@ -6,6 +6,7 @@ const MeshoptDecoder = require("./src/meshopt/meshopt_decoder.js");
 const MeshoptEncoder = require("./src/meshopt/meshopt_encoder.js");
 const { WavefrontObj } = require("./src/formats/wavefront.js");
 const { LevelMeshes } = require("./src/level/meshes/levelMeshes.js");
+const { LevelLod } = require("./src/level/meshes/levelLod.js");
 const { LevelCvtAdjacency } = require("./src/level/adjacency.js");
 const { LevelObjectsJson } = require("./src/level/objects/levelObjectsJson.js");
 const { silence, printf } = require("./src/utils/logger.js");
@@ -27,6 +28,12 @@ const argv = arg({
 
   // Merge chunks to a single object.
   "-m": Boolean,
+  // Target .meshes file version 0x3D (default 0x3C) when converting.
+  "--v3d": Boolean,
+  // Keep Wavefront .obj winding (default: flip to Sky's CW front-face).
+  "--no-flip-winding": Boolean,
+  // Number of LOD levels to generate (default 1). Higher levels are decimated.
+  "--lods": Number,
   // Input file.
   "-i": String,
   // Output file.
@@ -133,6 +140,20 @@ function touchObject(meshes, merge) {
 
     converter.initialize(rawMesh);
     meshes.geo = converter.convert();
+    // Build the LOD0 render geometry (the segment the game actually draws).
+    // Sky's front-face winding is the reverse of Wavefront .obj, so flip by
+    // default (confirmed in-game); --no-flip-winding keeps the .obj order.
+    // --lods N emits N LOD levels (LOD1+ are grid-decimated).
+    var numLods = Math.max(1, Math.min(5, argv["--lods"] || 1))
+      , flip = !argv["--no-flip-winding"]
+      , lodChain = converter.buildLodChain(numLods, flip);
+    meshes.lods = lodChain.map(function (submeshes) {
+      var lod = new LevelLod();
+      lod.setSubmeshes(submeshes);
+      return lod;
+    });
+    if (argv["--v3d"])
+      meshes.fileVersion = 0x3D;
     setDesc(meshes.desc, input);
     fs.writeFileSync(output, meshes.toFileBuffer());
     printf("Converted:");
@@ -210,6 +231,9 @@ function touchObject(meshes, merge) {
     printf("  -o <file>           Output file");
     printf("  -s                  Disable logger");
     printf("  -m                  Merge chunks when exporting to .obj");
+    printf("  --v3d               Target .meshes version 0x3D when converting");
+    printf("  --lods <n>          Generate n LOD levels (1-5; higher = decimated)");
+    printf("  --no-flip-winding   Keep .obj winding (default flips to Sky's)");
     return;
   }
 }().catch(e => {

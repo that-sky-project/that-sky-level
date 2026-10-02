@@ -100,7 +100,7 @@ function parseObj(objStr, materialBarn) {
             , posRef = positionRefs[posIdx - 1]
             , norm = (normIdx !== null && normals[normIdx - 1])
               ? normals[normIdx - 1]
-              : [0, 1, 0];
+              : new R8G8B8A8_SNORM(0, 1, 0);
 
           var vtx = new TriangleMeshVertex(pos, norm);
           vtx.nearby = posRef;
@@ -136,7 +136,7 @@ class WavefrontObj extends TriangleMesh {
   fromFileBuffer(fileBuffer) {
     this.clear();
 
-    var raw = parseObj(fileBuffer.toString("uit-8"), this.materials);
+    var raw = parseObj(fileBuffer.toString("utf-8"), this.materials);
 
     this.vtxBuffer = raw.vertices;
     this.cmdBuffer = raw.faces;

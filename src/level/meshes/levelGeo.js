@@ -192,6 +192,10 @@ class LevelGeo extends IBinarying {
   constructor() {
     super();
 
+    // File version of the containing .meshes (0x3C or 0x3D). 0x3D appends a
+    // trailing "wayfinder region" block after the subchunks.
+    this.fileVersion = 0x3C;
+
     // Counts.
     this.indexCount = 0;
     this.vertexCount = 0;
@@ -203,6 +207,11 @@ class LevelGeo extends IBinarying {
     this.vertices = [];
     this.chunks = [];
     this.subchunks = [];
+
+    // 0x3D only. Each region is { cells: Buffer } where cells holds
+    // cellCount * 20 bytes of opaque navigation cell data (preserved verbatim
+    // for round-tripping; the converter emits an empty list).
+    this.wayfinderRegions = [];
   }
 
   fromStream(stream) {
@@ -240,6 +249,17 @@ class LevelGeo extends IBinarying {
     this.subchunks = [];
     for (var i = 0; i < this.subchunkCount; i++)
       this.subchunks.push(stream.readType(LevelGeoSubchunk));
+
+    // Read the 0x3D wayfinder region block, if present. The game only reads it
+    // for version >= 0x3D and only when bytes remain in the segment.
+    this.wayfinderRegions = [];
+    if (this.fileVersion >= 0x3D && !stream.done()) {
+      var regionCount = stream.readUint32();
+      for (var i = 0; i < regionCount; i++) {
+        var cellCount = stream.readUint32();
+        this.wayfinderRegions.push({ cells: stream.readBytes(cellCount * 20) });
+      }
+    }
   }
 
   toStream(stream) {
@@ -271,6 +291,17 @@ class LevelGeo extends IBinarying {
     // Write areas.
     for (var area of this.subchunks)
       stream.writeType(area);
+
+    // Write the 0x3D wayfinder region block. The converter has no navigation
+    // data, so it writes an empty region list (regionCount = 0).
+    if (this.fileVersion >= 0x3D) {
+      stream.writeUint32(this.wayfinderRegions.length);
+      for (var region of this.wayfinderRegions) {
+        var cells = region.cells || Buffer.alloc(0);
+        stream.writeUint32(Math.floor(cells.length / 20));
+        stream.writeBytes(cells);
+      }
+    }
   }
 }
 
