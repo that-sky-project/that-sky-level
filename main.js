@@ -25,6 +25,9 @@ const argv = arg({
   // Convert from .level.bin to .level.json
   "--deserialize": Boolean,
 
+  // Declaration group for level objects.
+  "--decl": String,
+
   // Merge chunks to a single object.
   "-m": Boolean,
   // Input file.
@@ -39,6 +42,7 @@ const argv = arg({
   "-C": "--convert",
   "-S": "--serialize",
   "-D": "--deserialize",
+  "-d": "--decl",
 }, { permissive: true });
 
 function readModelFile(path) {
@@ -174,22 +178,32 @@ function touchObject(meshes, merge) {
     printf("  Indices: " + result.totalIdx);
   } else if (argv["--serialize"]) {
     var input = argv["-i"]
-      , output = argv["-o"] || "./Objects.level.bin";
+      , output = argv["-o"] || "./Objects.level.bin"
+      , declFile = argv["--decl"]
+      , decl;
 
     if (!input)
       throw new Error("no input file");
+
+    if (declFile)
+      decl = JSON.parse(fs.readFileSync(declFile, "utf-8"));
 
     var file = fs.readFileSync(input, "utf-8");
-    fs.writeFileSync(output, LevelObjectsJson.write(JSON.parse(file)));
+    fs.writeFileSync(output, LevelObjectsJson.write(JSON.parse(file), decl));
   } else if (argv["--deserialize"]) {
     var input = argv["-i"]
-      , output = argv["-o"] || "./Objects.level.json";
+      , output = argv["-o"] || "./Objects.level.json"
+      , declFile = argv["--decl"]
+      , decl;
 
     if (!input)
       throw new Error("no input file");
 
+    if (declFile)
+      decl = JSON.parse(fs.readFileSync(declFile, "utf-8"));
+
     var file = fs.readFileSync(input);
-    fs.writeFileSync(output, JSON.stringify(LevelObjectsJson.read(file), null, 2));
+    fs.writeFileSync(output, JSON.stringify(LevelObjectsJson.read(file, decl), null, 2));
   } else {
     printf("that-sky-level");
     printf("Copyright (c) 2026 That Sky Project");
@@ -205,6 +219,7 @@ function touchObject(meshes, merge) {
     printf("  --convert, -C       Convert from .obj to .meshes");
     printf("  --serialize, -S     Convert from .level.json to .level.bin");
     printf("  --deserialize, -D   Convert from .level.bin to .level.json");
+    printf("  --decl, -d <file>   Declaration group for level objects");
     printf("  --help, -h          Show this help");
     printf("  -i <file>           Input file");
     printf("  -o <file>           Output file");
